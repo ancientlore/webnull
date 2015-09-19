@@ -48,7 +48,7 @@ Usage:
   webnull [options]
 
 Example:
-  hurl -addr :8080
+  webnull -addr :8080
 
 Options:`)
 	flag.PrintDefaults()
