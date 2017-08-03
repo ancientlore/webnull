@@ -8,21 +8,21 @@ import (
 	"net/http"
 	"path"
 	"strings"
+	"time"
 )
 
 const (
-	cMedia_NullPng = "iQRMiVBORw0KGgoAAAANSUhEUgAAACQBBPBSCAMAAADW3miqAAAABGdBTUEAALGPC_xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAANlBMVEUAAAAVFDyyAwDsAAAAyZVz2QAAABB0Uk5TAMAwINCQYBBQgKBw8EDgsCRsCvcAAAABYktHRACIBR1IAAAACXBIWXMAAC4jAQT0MAEBeKU_dgAAARRJREFUOMuFU1sChCAIVDczzJT7n3Z94KPEmq_SEYYBhOAhEZX4wA9x--IIjbiv7swBVkp9KofOLHJYhw2W5-wDBVGykXa6lLKQN4Z1pQtf1NrCmkl-eEx5Ty5ZLSh-25D-uUDVmeS2cThZpYaHxe1oJ4Y76RycKW6rOV8YgpPbKd-9x1s8ubpsUlaPCKniQXY1CxakNiTwQoIq7o0UDTNfpKNZ8UIKrSQ9kTzVG2X7XuXDAklmQu-9n8wEakuTnWI-23KVoy47d_PRYFEmo8u-zU5FqsWpLvvkhu6XQrkmO28FPEn5KZJsA4tFoBXxAbTMX_wK23E32bVLSQaKA8EjqtIQ4gZLOMQK3e01rtlhVvcqyx_mHhaYGJ81fQAAAABJRU5ErkJggg=="
+	cMedia_NullPng = "iQRMiVBORw0KGgoAAAANSUhEUgAAACQBBPBSCAMAAADW3miqAAAABGdBTUEAALGPC_xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAANlBMVEUAAAAVFDyyAwD0cAEAAADJlXPZAAAAEHRSTlMAwDAg0JBgEFCAoHDwQOCwJGwK9wAAAAFiS0dEAIgFHUgAAAAJcEhZcwAALiMAAC4jAXilP3YAAAEUSURBVDjLhVNbAoQgCFQ3M8yU-592feCjxJqv0hGGAYTgIRGV-MAPcfviCI24r-7MAVZKfSqHzixyWIcNlufsAwVRspF2upSykDeGdaULX9TawppJfnhMeU8uWS0oftuQ_rlA1ZnktnE4WaWGh8XtaCeGO-kcnCluqzlfGIKT2ynfvcdbPLm6bFJWjwip4kF2NQsWpDYk8EKCKu6NFA0zX6SjWfFCCq0kPZE81Rtl-17lwwJJZkLvvZ_MBGpLk51iPttylaMuO3fz0WBRJqPLvs1ORarFqS775Ibul0K5JjtvBTxJ-SmSbAOLRaAV8QG0zF_8CttxN9m1S0kGigPBI6rSEOIGSzjECt3tNa7ZYVb3Kssf5h4WmBifNX0AAAAASUVORK5CYII="
 )
 
 var staticFiles = map[string]string{
 	"/media/null.png": cMedia_NullPng,
 }
 
+// Lookup returns the bytes associated with the given path, or nil if the path was not found.
 func Lookup(path string) []byte {
 	s, ok := staticFiles[path]
-	if !ok {
-		return nil
-	} else {
+	if ok {
 		d, err := base64.URLEncoding.DecodeString(s)
 		if err != nil {
 			log.Print("main.Lookup: ", err)
@@ -35,8 +35,10 @@ func Lookup(path string) []byte {
 		}
 		return r
 	}
+	return nil
 }
 
+// ServeHTTP serves the stored file data over HTTP.
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p := r.URL.Path
 	if strings.HasSuffix(p, "/") {
@@ -48,6 +50,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if mt != "" {
 			w.Header().Set("Content-Type", mt)
 		}
+		w.Header().Set("Expires", time.Now().AddDate(0, 0, 1).Format(time.RFC1123))
 		w.Write(b)
 	} else {
 		http.NotFound(w, r)
