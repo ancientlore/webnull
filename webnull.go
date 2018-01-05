@@ -85,8 +85,10 @@ func main() {
 
 	http.Handle("/status/", http.StripPrefix("/status", http.HandlerFunc(kubismus.ServeHTTP)))
 	http.Handle("/", kubismus.HttpRequestMetric("Requests", handleRequest()))
-	http.Handle("/http", kubismus.HttpRequestMetric("Requests", handleRequest2()))
-	http.Handle("/http/", kubismus.HttpRequestMetric("Requests", handleRequest2()))
+	http.Handle("/http", kubismus.HttpRequestMetric("Requests", handleRequestStatus()))
+	http.Handle("/http/", kubismus.HttpRequestMetric("Requests", handleRequestStatus()))
+	http.Handle("/delay", kubismus.HttpRequestMetric("Requests", handleRequestDelayMs()))
+	http.Handle("/delay/", kubismus.HttpRequestMetric("Requests", handleRequestDelayMs()))
 	http.HandleFunc("/media/", ServeHTTP)
 
 	kubismus.Setup("/web/null", "/media/null.png")
@@ -137,10 +139,9 @@ func handleRequest() http.HandlerFunc {
 	}
 }
 
-func handleRequest2() http.HandlerFunc {
+func handleRequestStatus() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		s := strings.TrimPrefix(req.URL.Path, "/http/")
-		log.Print(s)
 		id, err := strconv.ParseInt(s, 10, 32)
 		if err != nil {
 			id = 0
@@ -153,6 +154,28 @@ func handleRequest2() http.HandlerFunc {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Content-Length", strconv.Itoa(len(body)))
 		w.WriteHeader(int(id))
+		io.WriteString(w, body)
+	}
+}
+
+func handleRequestDelayMs() http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		s := strings.TrimPrefix(req.URL.Path, "/delay/")
+		ms, err := strconv.ParseInt(s, 10, 32)
+		if err != nil {
+			ms = 0
+		}
+		delay := time.Duration(ms) * time.Millisecond
+		status := http.StatusOK
+		if delay < 0 || delay > 30*time.Second {
+			status = http.StatusBadRequest
+		} else {
+			time.Sleep(delay)
+		}
+		body := http.StatusText(status)
+		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+		w.WriteHeader(status)
 		io.WriteString(w, body)
 	}
 }
