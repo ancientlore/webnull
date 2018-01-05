@@ -3,16 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/ancientlore/flagcfg"
-	"github.com/ancientlore/kubismus"
-	"github.com/facebookgo/flagenv"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/ancientlore/flagcfg"
+	"github.com/ancientlore/kubismus"
+	"github.com/facebookgo/flagenv"
 )
 
 // github.com/ancientlore/binder is used to package the web files into the executable.
@@ -83,6 +85,8 @@ func main() {
 
 	http.Handle("/status/", http.StripPrefix("/status", http.HandlerFunc(kubismus.ServeHTTP)))
 	http.Handle("/", kubismus.HttpRequestMetric("Requests", handleRequest()))
+	http.Handle("/http", kubismus.HttpRequestMetric("Requests", handleRequest2()))
+	http.Handle("/http/", kubismus.HttpRequestMetric("Requests", handleRequest2()))
 	http.HandleFunc("/media/", ServeHTTP)
 
 	kubismus.Setup("/web/null", "/media/null.png")
@@ -129,6 +133,26 @@ func handleRequest() http.HandlerFunc {
 		var body = "OK"
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+		io.WriteString(w, body)
+	}
+}
+
+func handleRequest2() http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		s := strings.TrimPrefix(req.URL.Path, "/http/")
+		log.Print(s)
+		id, err := strconv.ParseInt(s, 10, 32)
+		if err != nil {
+			id = 0
+		}
+		body := http.StatusText(int(id))
+		if body == "" {
+			body = http.StatusText(http.StatusOK)
+			id = http.StatusOK
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+		w.WriteHeader(int(id))
 		io.WriteString(w, body)
 	}
 }
