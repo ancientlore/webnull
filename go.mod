@@ -10,3 +10,5 @@ require (
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
 )
+
+go 1.13
