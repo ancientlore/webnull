@@ -1,4 +1,4 @@
-FROM golang:latest as builder
+FROM golang:1.14.4 as builder
 WORKDIR /go/src/github.com/ancientlore/webnull
 COPY . .
 WORKDIR /go/src/github.com/ancientlore/webnull
