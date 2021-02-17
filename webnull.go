@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"io"
@@ -17,11 +18,8 @@ import (
 	"github.com/facebookgo/flagenv"
 )
 
-// github.com/ancientlore/binder is used to package the web files into the executable.
-//go:generate binder -package main -o webcontent.go media/*.png
-
 const (
-	VERSION = "0.2"
+	VERSION = "0.3"
 )
 
 var (
@@ -29,6 +27,9 @@ var (
 	cpus int    = 1
 	help bool
 )
+
+//go:embed media/*.png
+var media embed.FS
 
 func init() {
 	// http service/status address
@@ -89,7 +90,7 @@ func main() {
 	http.Handle("/http/", kubismus.HttpRequestMetric("Requests", handleRequestStatus()))
 	http.Handle("/delay", kubismus.HttpRequestMetric("Requests", handleRequestDelayMs()))
 	http.Handle("/delay/", kubismus.HttpRequestMetric("Requests", handleRequestDelayMs()))
-	http.HandleFunc("/media/", ServeHTTP)
+	http.Handle("/media/", http.FileServer(http.FS(media)))
 
 	kubismus.Setup("/web/null", "/media/null.png")
 	kubismus.Note("Host Name", name)
