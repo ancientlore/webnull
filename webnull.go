@@ -13,13 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/ancientlore/flagcfg"
 	"github.com/ancientlore/kubismus"
 	"github.com/facebookgo/flagenv"
-)
-
-const (
-	VERSION = "0.3"
 )
 
 var (
@@ -84,13 +81,13 @@ func main() {
 
 	name, _ := os.Hostname()
 
-	http.Handle("/status/", http.StripPrefix("/status", http.HandlerFunc(kubismus.ServeHTTP)))
-	http.Handle("/", kubismus.HttpRequestMetric("Requests", handleRequest()))
-	http.Handle("/http", kubismus.HttpRequestMetric("Requests", handleRequestStatus()))
-	http.Handle("/http/", kubismus.HttpRequestMetric("Requests", handleRequestStatus()))
-	http.Handle("/delay", kubismus.HttpRequestMetric("Requests", handleRequestDelayMs()))
-	http.Handle("/delay/", kubismus.HttpRequestMetric("Requests", handleRequestDelayMs()))
-	http.Handle("/media/", http.FileServer(http.FS(media)))
+	http.Handle("/status/", gziphandler.GzipHandler(http.StripPrefix("/status", cspHandler(http.HandlerFunc(kubismus.ServeHTTP)))))
+	http.Handle("/", kubismus.HttpRequestMetric("Requests", cspHandler(handleRequest())))
+	http.Handle("/http", kubismus.HttpRequestMetric("Requests", cspHandler(handleRequestStatus())))
+	http.Handle("/http/", kubismus.HttpRequestMetric("Requests", cspHandler(handleRequestStatus())))
+	http.Handle("/delay", kubismus.HttpRequestMetric("Requests", cspHandler(handleRequestDelayMs())))
+	http.Handle("/delay/", kubismus.HttpRequestMetric("Requests", cspHandler(handleRequestDelayMs())))
+	http.Handle("/media/", cspHandler(http.FileServer(http.FS(media))))
 
 	kubismus.Setup("/web/null", "/media/null.png")
 	kubismus.Note("Host Name", name)
@@ -101,6 +98,18 @@ func main() {
 	go calcMetrics()
 
 	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+const csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.googleapis.com fonts.gstatic.com"
+
+func cspHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+		w.Header().Set("Content-Security-Policy", csp)
+		h.ServeHTTP(w, r)
+	})
 }
 
 func calcMetrics() {
