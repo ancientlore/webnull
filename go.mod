@@ -2,7 +2,7 @@ module github.com/ancientlore/webnull
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
-	github.com/ancientlore/flagcfg v1.0.4
+	github.com/ancientlore/flagcfg v1.0.5
 	github.com/ancientlore/kubismus v1.1.2
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
