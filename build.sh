@@ -17,6 +17,14 @@ echo Pushing ancientlore/webnull:$TAG
 docker push ancientlore/webnull:$TAG
 
 echo
+echo Tagging ancientlore/webnull:latest
+docker tag ancientlore/webnull:$TAG ancientlore/webnull:latest
+
+echo
+echo Pushing ancientlore/webull:latest
+docker push ancientlore/webnull:latest
+
+echo
 echo Tagging ancientlore.registry.cpln.io/webnull:$TAG
 docker tag ancientlore/webnull:$TAG ancientlore.registry.cpln.io/webnull:$TAG
 
