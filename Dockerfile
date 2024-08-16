@@ -1,7 +1,7 @@
-ARG GO_VERSION=1.20
-ARG IMG_VERSION=1.20
+ARG GO_VERSION=1.23
+ARG IMG_VERSION=1.23
 
-FROM golang:${GO_VERSION} as builder
+FROM golang:${GO_VERSION} AS builder
 WORKDIR /go/src/github.com/ancientlore/webnull
 COPY . .
 WORKDIR /go/src/github.com/ancientlore/webnull
