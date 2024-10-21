@@ -10,7 +10,7 @@ echo Tag is $TAG
 
 echo
 echo Building ancientlore/webnull:$TAG
-docker build --build-arg GO_VERSION=$GO_VERSION --build-arg IMG_VERSION=$GO_MAJOR_VERSION -t ancientlore/webnull:$TAG . || exit 1
+docker buildx build --build-arg GO_VERSION=$GO_VERSION --build-arg IMG_VERSION=$GO_MAJOR_VERSION --platform linux/amd64,linux/arm64 -t ancientlore/webnull:$TAG . || exit 1
 
 gum confirm "Push?" || exit 1
 
