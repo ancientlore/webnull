@@ -32,9 +32,6 @@ func init() {
 	// http service/status address
 	flag.StringVar(&addr, "addr", addr, "HTTP service address for monitoring.")
 
-	// runtime
-	flag.IntVar(&cpus, "cpu", cpus, "Number of CPUs to use.")
-
 	// help
 	flag.BoolVar(&help, "help", false, "Show help.")
 }
@@ -76,9 +73,6 @@ func main() {
 		return
 	}
 
-	// setup number of CPUs
-	runtime.GOMAXPROCS(cpus)
-
 	name, _ := os.Hostname()
 
 	http.Handle("/status/", gziphandler.GzipHandler(http.StripPrefix("/status", cspHandler(http.HandlerFunc(kubismus.ServeHTTP)))))
@@ -91,7 +85,7 @@ func main() {
 
 	kubismus.Setup("/web/null", "/media/null.png")
 	kubismus.Note("Host Name", name)
-	kubismus.Note("CPUs", fmt.Sprintf("%d of %d", runtime.GOMAXPROCS(0), runtime.NumCPU()))
+	kubismus.Note("CPUs", fmt.Sprintf("%d", runtime.NumCPU()))
 	kubismus.Define("Requests", kubismus.COUNT, "Requests/second")
 	kubismus.Define("Requests", kubismus.SUM, "Bytes/second")
 
@@ -114,29 +108,26 @@ func cspHandler(h http.Handler) http.Handler {
 
 func calcMetrics() {
 	tck := time.NewTicker(time.Duration(10) * time.Second)
-	for {
-		select {
-		case <-tck.C:
-			kubismus.Note("Goroutines", fmt.Sprintf("%d", runtime.NumGoroutine()))
-			go func() {
-				v := kubismus.GetMetrics("Requests", kubismus.SUM)
-				defer kubismus.ReleaseMetrics(v)
-				c := kubismus.GetMetrics("Requests", kubismus.COUNT)
-				defer kubismus.ReleaseMetrics(c)
-				sz := len(c)
-				T := 0.0
-				C := 0.0
-				for i := sz - 60; i < sz; i++ {
-					C += c[i]
-					T += v[i]
-				}
-				A := 0.0
-				if C > 0.0 {
-					A = T / C
-				}
-				kubismus.Note("Last One Minute", fmt.Sprintf("%.0f Requests, %.0f Average Size, %0.f Bytes", C, A, T))
-			}()
-		}
+	for range tck.C {
+		kubismus.Note("Goroutines", fmt.Sprintf("%d", runtime.NumGoroutine()))
+		go func() {
+			v := kubismus.GetMetrics("Requests", kubismus.SUM)
+			defer kubismus.ReleaseMetrics(v)
+			c := kubismus.GetMetrics("Requests", kubismus.COUNT)
+			defer kubismus.ReleaseMetrics(c)
+			sz := len(c)
+			T := 0.0
+			C := 0.0
+			for i := sz - 60; i < sz; i++ {
+				C += c[i]
+				T += v[i]
+			}
+			A := 0.0
+			if C > 0.0 {
+				A = T / C
+			}
+			kubismus.Note("Last One Minute", fmt.Sprintf("%.0f Requests, %.0f Average Size, %0.f Bytes", C, A, T))
+		}()
 	}
 }
 

@@ -15,4 +15,4 @@ require (
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 )
 
-go 1.19
+go 1.25
