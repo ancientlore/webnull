@@ -2,17 +2,9 @@ module github.com/ancientlore/webnull
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
-	github.com/ancientlore/flagcfg v1.3.0
 	github.com/ancientlore/kubismus v1.1.3
-	github.com/facebookgo/flagenv v0.0.0-20160425205200-fcd59fca7456
 )
 
-require (
-	github.com/BurntSushi/toml v1.5.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
-	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
-	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
-)
+require github.com/davecgh/go-spew v1.1.1 // indirect
 
 go 1.25

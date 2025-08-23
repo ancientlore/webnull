@@ -14,14 +14,11 @@ import (
 	"time"
 
 	"github.com/NYTimes/gziphandler"
-	"github.com/ancientlore/flagcfg"
 	"github.com/ancientlore/kubismus"
-	"github.com/facebookgo/flagenv"
 )
 
 var (
 	addr string = ":8080"
-	cpus int    = 1
 	help bool
 )
 
@@ -37,7 +34,7 @@ func init() {
 }
 
 func showHelp() {
-	fmt.Println(`webnull
+	fmt.Fprintln(os.Stderr, `webnull
 
 /dev/null for http
 
@@ -49,24 +46,11 @@ Example:
 
 Options:`)
 	flag.PrintDefaults()
-	fmt.Println(`
-All of the options can be set via environment variables prefixed with "WEBNULL_".
-
-Options can also be specified in a TOML configuration file named "webnull.config". The location
-of the file can be overridden with the WEBNULL_CONFIG environment variable.`)
 }
 
 func main() {
 	// Parse flags from command-line
 	flag.Parse()
-
-	// Parser flags from config
-	flagcfg.AddDefaults()
-	flagcfg.Parse()
-
-	// Parse flags from environment (using github.com/facebookgo/flagenv)
-	flagenv.Prefix = "WEBNULL_"
-	flagenv.Parse()
 
 	if help {
 		showHelp()
